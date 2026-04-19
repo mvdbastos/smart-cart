@@ -19,5 +19,10 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // react-hooks v7 introduced set-state-in-effect which flags valid async
+      // data-fetching patterns (calling loadX() in useEffect where loadX sets state).
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

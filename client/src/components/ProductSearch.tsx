@@ -18,20 +18,26 @@ export function ProductSearch({ onSelect, placeholder = "Search products..." }: 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (query.length < 2) {
       setResults([]);
       return;
     }
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = setTimeout(async () => {
       const data = await api.get<Product[]>(`/products?q=${encodeURIComponent(query)}`);
       setResults(data);
       setOpen(true);
     }, 300);
-    return () => clearTimeout(timeoutRef.current);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [query]);
 
   return (

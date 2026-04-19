@@ -6,13 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { LogOut, TrendingUp, TrendingDown, Award } from "lucide-react";
 
-interface ReputationEntry {
-  id: string;
-  delta: number;
-  reason: string;
-  createdAt: string;
-}
-
 interface UserProfile {
   id: string;
   email: string | null;
@@ -33,15 +26,6 @@ export default function ProfilePage() {
   if (!user || !profile) {
     return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>;
   }
-
-  const reasonLabel = (reason: string) => {
-    switch (reason) {
-      case "VOTE_WIN": return "Price vote win";
-      case "VOTE_LOSS": return "Price vote loss";
-      case "EARLY_REPORTER_RECOVERY": return "Early reporter bonus";
-      default: return reason;
-    }
-  };
 
   return (
     <div className="space-y-6">
