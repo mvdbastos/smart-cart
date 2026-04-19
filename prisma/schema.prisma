@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  ANONYMOUS
+  EMAIL
+  GOOGLE
+}
+
+enum VotingRoundStatus {
+  OPEN
+  CLOSED
+}
+
+enum ListMode {
+  PLANNING
+  BUYING
+}
+
+enum ReputationReason {
+  VOTE_WIN
+  VOTE_LOSS
+  EARLY_REPORTER_RECOVERY
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String?      @unique
+  name         String?
+  passwordHash String?
+  provider     AuthProvider  @default(ANONYMOUS)
+  googleId     String?      @unique
+  reputation   Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  priceReports      PriceReport[]
+  reputationChanges ReputationChange[]
+  shoppingLists     ShoppingList[]
+  suggestedStores   Store[]            @relation("SuggestedStores")
+}
+
+model Store {
+  id            String   @id @default(uuid())
+  name          String
+  address       String?
+  isPreset      Boolean  @default(false)
+  suggestedById String?
+  suggestedBy   User?    @relation("SuggestedStores", fields: [suggestedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  priceReports  PriceReport[]
+  votingRounds  VotingRound[]
+  shoppingLists ShoppingList[]
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  category  String?
+  unit      String?
+  barcode   String?  @unique
+  createdAt DateTime @default(now())
+
+  priceReports      PriceReport[]
+  votingRounds      VotingRound[]
+  shoppingListItems ShoppingListItem[]
+}
+
+model VotingRound {
+  id           String             @id @default(uuid())
+  productId    String
+  product      Product            @relation(fields: [productId], references: [id])
+  storeId      String
+  store        Store              @relation(fields: [storeId], references: [id])
+  status       VotingRoundStatus  @default(OPEN)
+  winningPrice Decimal?           @db.Decimal(10, 2)
+  reportCount  Int                @default(0)
+  openedAt     DateTime           @default(now())
+  closedAt     DateTime?
+
+  priceReports      PriceReport[]
+  reputationChanges ReputationChange[]
+
+  @@unique([productId, storeId, status], name: "unique_open_round")
+}
+
+model PriceReport {
+  id            String      @id @default(uuid())
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  storeId       String
+  store         Store       @relation(fields: [storeId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  price         Decimal     @db.Decimal(10, 2)
+  votingRoundId String
+  votingRound   VotingRound @relation(fields: [votingRoundId], references: [id])
+  reportedAt    DateTime    @default(now())
+
+  @@index([productId, storeId])
+  @@index([votingRoundId])
+}
+
+model ReputationChange {
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  delta         Int
+  reason        ReputationReason
+  votingRoundId String
+  votingRound   VotingRound      @relation(fields: [votingRoundId], references: [id])
+  createdAt     DateTime         @default(now())
+
+  @@index([userId])
+}
+
+model ShoppingList {
+  id              String   @id @default(uuid())
+  name            String
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  mode            ListMode @default(PLANNING)
+  selectedStoreId String?
+  selectedStore   Store?   @relation(fields: [selectedStoreId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id             String       @id @default(uuid())
+  shoppingListId String
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+  quantity       Int          @default(1)
+  isChecked      Boolean      @default(false)
+  expectedPrice  Decimal?     @db.Decimal(10, 2)
+  actualPrice    Decimal?     @db.Decimal(10, 2)
+  checkedAt      DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@unique([shoppingListId, productId])
+}
