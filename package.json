@@ -2,8 +2,12 @@
   "name": "smart-cart",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
+    "agent-browser": "agent-browser",
     "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
@@ -13,6 +17,7 @@
     "build": "npm run build -w client && npm run build -w server"
   },
   "devDependencies": {
+    "agent-browser": "^0.26.0",
     "concurrently": "^9.1.2",
     "dotenv": "^17.2.3",
     "typescript": "^5.7.3"
