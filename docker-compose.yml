@@ -7,6 +7,8 @@ services:
       POSTGRES_USER: smartcart
       POSTGRES_PASSWORD: smartcart_dev
       POSTGRES_DB: smartcart
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT:-127.0.0.1:5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
